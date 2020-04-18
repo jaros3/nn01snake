@@ -52,5 +52,23 @@ namespace NN_01_Snake {
                 }
             return new Matrix (cells);
         }
+
+        public static Matrix Cross (Matrix a, Matrix b, float mutationChance) {
+            if (a.Rows != b.Rows || a.Columns != b.Columns)
+                throw new InvalidOperationException ("Размеры не совпадают");
+
+            float[, ] cells = new float[a.Rows, a.Columns];
+            for (int i = 0; i < a.Rows; i++)
+                for (int j = 0; j < a.Columns; j++) {
+                    if (Rng.GetFloat (0, 1) < 0.5f)
+                        cells[i, j] = a[i, j];
+                    else
+                        cells[i, j] = b[i, j];
+                    if (Rng.GetFloat (0, 1) < mutationChance)
+                        cells[i, j] = Math.Max (-1, Math.Min (1, cells[i, j] + (float) Rng.Gaussian (0, 1)));
+                }
+
+            return new Matrix (cells);
+        }
     }
 }

@@ -10,8 +10,20 @@ namespace NN_01_Snake {
         public const int HiddenSize = 12;
         public const int OutputSize = 4;
 
-        private Matrix inputToHidden = Matrix.Random (HiddenSize, InputSize + 1);
-        private Matrix hiddenToOutput = Matrix.Random (OutputSize, HiddenSize + 1);
+        public const float MutationChance = 0.02f;
+
+        private Matrix inputToHidden;
+        private Matrix hiddenToOutput;
+
+        public Brain (Matrix inputToHidden, Matrix hiddenToOutput) {
+            this.inputToHidden = inputToHidden;
+            this.hiddenToOutput = hiddenToOutput;
+        }
+
+        public static Brain Random () =>
+            new Brain (
+                Matrix.Random (HiddenSize, InputSize + 1),
+                Matrix.Random (OutputSize, HiddenSize + 1));
 
         public IReadOnlyList<float> Think (IReadOnlyList<float> inputs) {
             IReadOnlyList<float> inputsWith1 = inputs.AttachOne ();
@@ -24,5 +36,11 @@ namespace NN_01_Snake {
         }
 
         private static float ReLU (float x) => Math.Max (0, x);
+        private static float Sigmoid (float x) => 1 / (1 + (float) Math.Exp (-x));
+
+        public static Brain Cross (Brain mom, Brain dad) =>
+            new Brain (
+                Matrix.Cross (mom.inputToHidden, dad.inputToHidden, MutationChance),
+                Matrix.Cross (mom.hiddenToOutput, dad.hiddenToOutput, MutationChance));
     }
 }

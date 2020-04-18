@@ -8,28 +8,46 @@ using System.Threading.Tasks;
 namespace NN_01_Snake {
     class Snake {
         private const int InitialLength = 6;
+        private const int InitialTimeRemaining = 200;
+        private const int BonusTimePerApple = 100;
 
         public Board Board { get; }
         public Brain Brain { get; }
+
+        public bool IsAlive { get; set; } = true;
+        public int Lifetime { get; set; }
+        public int Apples { get; set; }
+        public int TimeRemaining { get; set; } = InitialTimeRemaining;
+
+        public double Score =>
+            Lifetime * Lifetime * Math.Pow (2, Math.Min (Apples, 10)) * Math.Max (1, Apples - 9);
 
         private IReadOnlyList<Pos> body;
 
         public Pos Head => body[0];
 
-        public Snake (Board board) {
+        public Snake (Board board) : this (board, Brain.Random ()) { }
+
+        public Snake (Board board, Brain brain) {
             Board = board;
-            Brain = new Brain ();
+            Brain = brain;
 
             Pos pos = board.RandomPosition ();
             body = Enumerable.Repeat (pos, InitialLength).ToList ();
         }
 
         public void Draw (Graphics g) {
+            if (!IsAlive)
+                return;
+
             foreach (Pos cell in body)
                 Board.DrawCell (g, Brushes.White, cell.X, cell.Y);
         }
 
         public void Step () {
+            if (!IsAlive)
+                return;
+
             IReadOnlyList<float> observations = GatherObservations ();
             IReadOnlyList<float> actions = Brain.Think (observations);
 
@@ -70,14 +88,24 @@ namespace NN_01_Snake {
 
         private void Move (Pos dir) {
             Pos newHead = Head + dir;
-            if (!Board.Contains (newHead) || body.Contains (newHead)) {
-                Board.Reset ();
+            if (!Board.Contains (newHead) || body.Contains (newHead) || TimeRemaining == 0) {
+                IsAlive = false;
                 return;
             }
+            Lifetime++;
+            TimeRemaining--;
+
             int take = body.Count - 1;
-            if (Board.Apple == newHead)
+            if (Board.Apple == newHead) {
                 take++;
+                Apples++;
+                TimeRemaining += BonusTimePerApple;
+                Board.PlaceApple ();
+            }
             body = new[] { newHead }.Concat (body.Take (take)).ToList ();
         }
+
+        public string Report () =>
+            $"Время жизни: {Lifetime}\r\nОсталось: {TimeRemaining}\r\nЯблоки: {Apples}\r\nОчки: {Score}";
     }
 }

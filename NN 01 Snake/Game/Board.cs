@@ -17,22 +17,28 @@ namespace NN_01_Snake {
         public Snake Snake { get; set; }
         public Pos Apple { get; set; }
 
-        public Board () => Reset ();
-
-        public void Reset () {
+        public Board () {
             Snake = new Snake (this);
-            Apple = RandomPosition ();
+            PlaceApple ();
         }
+        public Board (Brain brain) {
+            Snake = new Snake (this, brain);
+            PlaceApple ();
+        }
+
+        public void PlaceApple () =>
+            Apple = RandomPosition ();
+
         public Pos RandomPosition () => new Pos (
             Rng.GetInt (0, Width), Rng.GetInt (0, Height));
 
-        public void Draw (Graphics g) {
-            for (int i = 0; i < Height; i++)
-                for (int j = 0; j < Width; j++)
-                    DrawCell (g, Brushes.Black, j, i);
+        public static void Clear (Graphics g) =>
+            g.FillRectangle (Brushes.Black, 0, 0, Width * Size, Height * Size);
 
+        public void DrawApple (Graphics g) {
+            if (!Snake.IsAlive)
+                return;
             DrawCell (g, Brushes.Red, Apple.X, Apple.Y);
-            Snake.Draw (g);
         }
 
         public void DrawCell (Graphics g, Brush brush, int x, int y) =>
